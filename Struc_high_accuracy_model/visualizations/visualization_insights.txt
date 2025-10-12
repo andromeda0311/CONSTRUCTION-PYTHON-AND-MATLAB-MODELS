@@ -1,0 +1,95 @@
+**Visualization: Area_of_formworks__sq_m___visualization.png**
+
+**Insight:**
+The histogram for the "Area of formworks (sq.m.)" reveals a right-skewed distribution, indicating that the majority of projects in the dataset have a smaller formwork area, with a peak between 0.5 and 1.0 million sq.m. The frequency of projects diminishes as the formwork area increases, suggesting that projects with very large formwork areas are infrequent. The boxplot corroborates this, showing a median value closer to the first quartile and a number of outliers on the higher end, which represent exceptionally large projects. These outliers could disproportionately influence a linear model.
+
+**Recommendation:**
+This feature is fundamentally important for predicting structural costs and should be included in the model. However, due to the skewness and the presence of outliers, it is highly recommended to apply a transformation, such as a logarithmic scale, to normalize the distribution. This will help the model to be less sensitive to the extreme values of the outliers and to better capture the relationship between the formwork area and the project budget, likely improving the model's predictive accuracy and stability.
+
+**Visualization: Budget_visualization.png**
+
+**Insight:**
+The "Budget" visualization displays a right-skewed distribution, with the bulk of project budgets clustering at the lower end of the scale, mostly between 10 and 20 million. The histogram shows a sharp decline in frequency as the budget increases, indicating that high-budget projects are rare in this dataset. The boxplot confirms this, with a median skewed towards the lower quartile and several outliers identified at the higher end of the budget spectrum. These outliers represent projects with unusually high costs compared to the rest of the sample.
+
+**Recommendation:**
+As the target variable, "Budget" is essential and must be used for model training. The observed right-skewed distribution and outliers are important for diagnostics and evaluation. While we do not transform the target variable itself, its distribution suggests that the model's performance might be disproportionately affected by the few high-budget projects. It is crucial to use evaluation metrics that are robust to outliers, or to be mindful of how metrics like RMSE could be inflated by errors in predicting these extreme values. No direct action is needed on this variable before training, but its characteristics must be considered when interpreting results.
+
+**Visualization: Grade_40_visualization.png**
+
+**Insight:**
+The "Grade 40" visualization indicates a pronounced right-skewed distribution. The histogram shows that for most projects, the quantity of Grade 40 steel used is concentrated at the very low end of the scale, with a rapid fall-off in frequency as the quantity increases. This suggests that while Grade 40 steel is a common material, it is typically used in smaller quantities. The boxplot reinforces this, with a compact interquartile range at the low end and a significant number of outliers representing projects that require much larger amounts of this type of steel.
+
+**Recommendation:**
+The quantity of "Grade 40" steel is a direct cost component and is therefore a relevant feature for the budget prediction model. Given the extreme skewness and the presence of numerous outliers, it is advisable to apply a logarithmic transformation to this feature. This will help to normalize its distribution, mitigate the influence of the outliers, and allow the model to better learn the underlying relationship between the usage of Grade 40 steel and the total project cost. The feature should be retained and transformed.
+
+**Visualization: Grade_60_visualization.png**
+
+**Insight:**
+The "Grade 60" steel visualization exhibits a right-skewed distribution, with a significant concentration of data points at the lower end of the quantity scale. The histogram shows that while many projects use a small amount of Grade 60 steel, there is a more gradual tailing off in frequency as the quantity increases, compared to Grade 40. This suggests a wider range of usage for this higher-grade steel. The boxplot confirms this, showing a right-skewed distribution with several outliers indicating projects with exceptionally high quantities of Grade 60 steel.
+
+**Recommendation:**
+"Grade 60" steel is a key structural material, and its quantity is expected to be a strong predictor of project cost. The skewness of the distribution and the presence of outliers warrant a data transformation to improve model performance. Applying a logarithmic transformation to this feature is recommended to help normalize the distribution and reduce the leverage of the outlier data points. This will likely lead to a more accurate and reliable predictive model. The feature should be kept and transformed.
+
+**Visualization: gross_floor_area___cement_floor_finish__groove__visualization.png**
+
+**Insight:**
+The visualization for "gross floor area (cement floor finish, groove)" shows an extreme concentration of data at or near zero. The histogram is dominated by a single bar at the lowest end of the scale, indicating that almost all projects have a negligible area for this specific type of floor finish. The boxplot is compressed into a single line, further emphasizing the lack of variability in this feature. There are a couple of outliers, but the overwhelming majority of the data points are clustered at one value.
+
+**Recommendation:**
+This feature has almost zero variance, which means it provides very little information to distinguish between different projects. A feature that does not vary across the dataset cannot have any predictive power. Including it in the model would add unnecessary complexity and could introduce noise, without any benefit. Therefore, it is strongly recommended to **exclude** "gross floor area (cement floor finish, groove)" from the features used for training the model.
+
+**Visualization: Gross_floor_area__Cement_floor_finish__visualization.png**
+
+**Insight:**
+The visualization for "Gross floor area (Cement floor finish)" displays a right-skewed distribution. The histogram shows that the majority of projects have a cement floor finish area concentrated at the lower end, with a peak between 100,000 and 200,000 square units. The frequency of projects declines as the floor area increases. The boxplot confirms this skewness, with a median in the lower part of the interquartile range and a number of outliers representing projects with a significantly larger area of cement floor finish.
+
+**Recommendation:**
+The "Gross floor area (Cement floor finish)" is a valuable feature for predicting project costs. However, its right-skewed distribution and the presence of outliers suggest that it should be transformed to improve model performance. A logarithmic transformation is recommended to help normalize the distribution and reduce the influence of extreme values. This will enable the model to learn a more stable and accurate relationship between the floor area and the budget. The feature should be **retained** and transformed.
+
+**Visualization: Gross_floor_area__unglazed_tiles__visualization.png**
+
+**Insight:**
+The visualization for "Gross floor area (unglazed tiles)" reveals an extreme right-skewed distribution. The histogram is heavily concentrated at the zero mark, with a very tall bar indicating that the vast majority of projects have little to no area with unglazed tiles. The boxplot confirms this, showing a collapsed interquartile range at the bottom of the plot and a large number of outliers. This indicates that the feature has very low variance for the bulk of the dataset.
+
+**Recommendation:**
+Due to the extremely low variance and the fact that most projects have a value of zero for this feature, "Gross floor area (unglazed tiles)" is unlikely to be a useful predictor for the model. Features with such a distribution typically do not contribute meaningful information for a predictive model and can sometimes be detrimental. It is therefore recommended to **exclude** this feature from the model training process.
+
+**Visualization: Number_of_floors_visualization.png**
+
+**Insight:**
+The visualization for "Number of floors" clearly indicates that this feature has zero variance across the entire dataset. The histogram consists of a single bar, which means all projects have the same number of floors. The boxplot is collapsed into a single vertical line, confirming that the minimum, first quartile, median, third quartile, and maximum values are all identical.
+
+**Recommendation:**
+A feature with zero variance provides no information that can be used to predict a target variable. Since the "Number of floors" is constant for all projects in this dataset, it has no predictive power. Including such a feature in the model is not only useless but can also be problematic for some modeling algorithms. Therefore, the "Number of floors" feature should be **excluded** from the model training.
+
+**Visualization: Number_of_rooms_visualization.png**
+
+**Insight:**
+The visualization for "Number of rooms" is identical in nature to that of "Number of floors." The histogram consists of a single bar, and the boxplot is a single vertical line. This indicates that the "Number of rooms" feature also has zero variance across the dataset, meaning every project has the same number of rooms.
+
+**Recommendation:**
+Just like the "Number of floors," the "Number of rooms" feature has no predictive value due to its lack of variance. A feature that is constant across all data points cannot help a model learn to distinguish between different outcomes. Therefore, it is recommended to **exclude** the "Number of rooms" feature from the model training.
+
+**Visualization: Types_of_footings_foundation_visualization.png**
+
+**Insight:**
+The visualization for "Types of footings/foundation" is another case of a feature with zero variance. The histogram displays a single bar, indicating that all projects in the dataset have the same value for this feature. The boxplot is also collapsed into a single line, which confirms that there is no variation in the data.
+
+**Recommendation:**
+A feature with no variance has no predictive power. Since "Types of footings/foundation" is the same for all projects, it cannot be used to predict the budget. Including this feature in the model would be redundant and could potentially cause issues with some algorithms. It is therefore recommended to **exclude** this feature from the model training.
+
+**Visualization: Unnamed__25_to_50_visualization.png**
+
+**Insight:**
+The visualizations for all "Unnamed" columns (from 25 to 50) are identical. They all show a single bar in the histogram and a single line in the boxplot. This indicates that each of these columns contains a constant value across all projects in the dataset. These are likely artifacts from the data export process and do not represent meaningful features.
+
+**Recommendation:**
+All of the "Unnamed" columns have zero variance and therefore hold no predictive power. They are redundant and should be removed from the dataset before training the model. It is strongly recommended to **exclude** all features named "Unnamed: XX" from the model training.
+
+**Visualization: Volume_of_structural_concrete__cu_m___..._visualization.png (All variations)**
+
+**Insight:**
+All visualizations related to the "Volume of structural concrete" for different classes and curing times show an identical pattern of extreme right-skewness. The histograms are heavily concentrated at zero, indicating that for any specific type of concrete, the vast majority of projects use a very small volume, if any. The boxplots are all collapsed at the low end, with many outliers. This suggests that while concrete is used in all projects, the specific types are not universally used, leading to low variance for each individual feature.
+
+**Recommendation:**
+Including each of these specific concrete volume features separately in the model would be inefficient and could lead to poor performance due to high sparsity and multicollinearity. A much more effective approach is to perform feature engineering by aggregating all of these individual volumes into a single feature representing the **Total Volume of Structural Concrete**. This new feature would be a much more robust and powerful predictor of the budget. Therefore, it is recommended to **exclude** the individual concrete volume features and replace them with a single, aggregated feature.

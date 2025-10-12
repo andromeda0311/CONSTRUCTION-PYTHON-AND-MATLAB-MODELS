@@ -1,0 +1,203 @@
+Cleaned columns. Remaining columns: ['Project', 'Year', 'Budget', ' '  'B   'Budget', 'Fire alarm system', 'Panelboard', 'Lighting fixtures', 'Conduits', 'Sewer Line works', 'Plumbing fixtures', 'Wires']
+Successfully created the merged file: c:\Users\User\Documents\Online Projects\Ai\Machine Learning\Construction models\Mepfs_high_accuracy_model\MEPFS_Total_Cost.csv
+Saved initial visualization for Budget to c:\Users\User\Documents\Online Projects\Ai\Machine Learning\Construction models\Mepfs_high_accuracy_model\visualizations\Budget_initial_visualization.png
+Saved initial visualization for Fire alarm system to c:\Users\User\Documents\Online Projects\Ai\Machine Learning\Construction models\Mepfs_high_accuracy_model\visualizations\Fire_alarm_system_initial_visualization.png        
+Saved initial visualization for Panelboard to c:\Users\User\Documents\Online Projects\Ai\Machine Learning\Construction models\Mepfs_high_accuracy_model\visualizations\Panelboard_initial_visualization.png
+Saved initial visualization for Lighting fixtures to c:\Users\User\Documents\Online Projects\Ai\Machine Learning\Construction models\Mepfs_high_accuracy_model\visualizations\Lighting_fixtures_initial_visualization.png        
+Saved initial visualization for Conduits to c:\Users\User\Documents\Online Projects\Ai\Machine Learning\Construction models\Mepfs_high_accuracy_model\visualizations\Conduits_initial_visualization.png
+Saved initial visualization for Sewer Line works to c:\Users\User\Documents\Online Projects\Ai\Machine Learning\Construction models\Mepfs_high_accuracy_model\visualizations\Sewer_Line_works_initial_visualization.png
+Saved initial visualization for Plumbing fixtures to c:\Users\User\Documents\Online Projects\Ai\Machine Learning\Construction models\Mepfs_high_accuracy_model\visualizations\Plumbing_fixtures_initial_visualization.png        
+Saved initial visualization for Wires to c:\Users\User\Documents\Online Projects\Ai\Machine Learning\Construction models\Mepfs_high_accuracy_model\visualizations\Wires_initial_visualization.png
+
+Preprocessed data saved to c:\Users\User\Documents\Online Projects\Ai\Machine Learning\Construction models\Mepfs_high_accuracy_model\mepfs_preprocessed_data.csv
+Correlation matrix saved to c:\Users\User\Documents\Online Projects\Ai\Machine Learning\Construction models\Mepfs_high_accuracy_model\visualizations\feature_correlation_matrix.png
+Features: Fire alarm system, Panelboard, Lighting fixtures, Conduits, Sewer Line works, Plumbing fixtures, Wires
+Data split into training (122 rows) and testing (31 rows) sets.
+[1]     training's l2: 1.38386e+14      valid_1's l2: 1.79813e+14
+[2]     training's l2: 1.26197e+14      valid_1's l2: 1.65925e+14
+[3]     training's l2: 1.15582e+14      valid_1's l2: 1.50132e+14
+[4]     training's l2: 1.06985e+14      valid_1's l2: 1.3712e+14
+[5]     training's l2: 9.95479e+13      valid_1's l2: 1.28531e+14
+[6]     training's l2: 9.3541e+13       valid_1's l2: 1.19122e+14
+[7]     training's l2: 8.82932e+13      valid_1's l2: 1.14195e+14
+[8]     training's l2: 8.34278e+13      valid_1's l2: 1.09758e+14
+[9]     training's l2: 7.92536e+13      valid_1's l2: 1.05868e+14
+[10]    training's l2: 7.57555e+13      valid_1's l2: 1.03028e+14
+[11]    training's l2: 7.27657e+13      valid_1's l2: 9.85787e+13
+[12]    training's l2: 6.99575e+13      valid_1's l2: 9.57435e+13
+[13]    training's l2: 6.72263e+13      valid_1's l2: 9.34388e+13
+[14]    training's l2: 6.52728e+13      valid_1's l2: 9.18273e+13
+[15]    training's l2: 6.30756e+13      valid_1's l2: 9.03825e+13
+[16]    training's l2: 6.1082e+13       valid_1's l2: 8.93538e+13
+[17]    training's l2: 5.93622e+13      valid_1's l2: 8.83266e+13
+[18]    training's l2: 5.78203e+13      valid_1's l2: 8.79626e+13
+[19]    training's l2: 5.64092e+13      valid_1's l2: 8.71433e+13
+[20]    training's l2: 5.51226e+13      valid_1's l2: 8.63886e+13
+[21]    training's l2: 5.40506e+13      valid_1's l2: 8.58332e+13
+[22]    training's l2: 5.30299e+13      valid_1's l2: 8.42938e+13
+[23]    training's l2: 5.20069e+13      valid_1's l2: 8.37126e+13
+[24]    training's l2: 5.10663e+13      valid_1's l2: 8.37202e+13
+[25]    training's l2: 5.0291e+13       valid_1's l2: 8.35587e+13
+[26]    training's l2: 4.94827e+13      valid_1's l2: 8.32585e+13
+[27]    training's l2: 4.87585e+13      valid_1's l2: 8.31419e+13
+[28]    training's l2: 4.8103e+13       valid_1's l2: 8.29106e+13
+[29]    training's l2: 4.75485e+13      valid_1's l2: 8.20236e+13
+[30]    training's l2: 4.70213e+13      valid_1's l2: 8.20139e+13
+[31]    training's l2: 4.64739e+13      valid_1's l2: 8.17707e+13
+[32]    training's l2: 4.6031e+13       valid_1's l2: 8.17832e+13
+[33]    training's l2: 4.56162e+13      valid_1's l2: 8.17242e+13
+[34]    training's l2: 4.51437e+13      valid_1's l2: 8.15648e+13
+[35]    training's l2: 4.47865e+13      valid_1's l2: 8.09523e+13
+[36]    training's l2: 4.44501e+13      valid_1's l2: 8.09598e+13
+[37]    training's l2: 4.40629e+13      valid_1's l2: 8.01097e+13
+[38]    training's l2: 4.37609e+13      valid_1's l2: 8.01252e+13
+[39]    training's l2: 4.33975e+13      valid_1's l2: 8.00586e+13
+[40]    training's l2: 4.3125e+13       valid_1's l2: 7.92635e+13
+[41]    training's l2: 4.29027e+13      valid_1's l2: 7.98031e+13
+[42]    training's l2: 4.26716e+13      valid_1's l2: 7.93884e+13
+[43]    training's l2: 4.23508e+13      valid_1's l2: 7.90676e+13
+[44]    training's l2: 4.21221e+13      valid_1's l2: 7.91345e+13
+[45]    training's l2: 4.13753e+13      valid_1's l2: 7.86132e+13
+[46]    training's l2: 4.07661e+13      valid_1's l2: 7.81224e+13
+[47]    training's l2: 4.03788e+13      valid_1's l2: 7.83001e+13
+[48]    training's l2: 4.00459e+13      valid_1's l2: 7.85549e+13
+[49]    training's l2: 3.98267e+13      valid_1's l2: 7.86671e+13
+[50]    training's l2: 3.93125e+13      valid_1's l2: 7.82782e+13
+[51]    training's l2: 3.90456e+13      valid_1's l2: 7.84715e+13
+[52]    training's l2: 3.88651e+13      valid_1's l2: 7.84294e+13
+[53]    training's l2: 3.86959e+13      valid_1's l2: 7.78997e+13
+[54]    training's l2: 3.84534e+13      valid_1's l2: 7.81625e+13
+[55]    training's l2: 3.80378e+13      valid_1's l2: 7.78994e+13
+[56]    training's l2: 3.78046e+13      valid_1's l2: 7.77731e+13
+[57]    training's l2: 3.76151e+13      valid_1's l2: 7.80335e+13
+[58]    training's l2: 3.74575e+13      valid_1's l2: 7.76383e+13
+[59]    training's l2: 3.71957e+13      valid_1's l2: 7.77511e+13
+[60]    training's l2: 3.68253e+13      valid_1's l2: 7.75227e+13
+[61]    training's l2: 3.65339e+13      valid_1's l2: 7.66899e+13
+[62]    training's l2: 3.62906e+13      valid_1's l2: 7.68417e+13
+[63]    training's l2: 3.61416e+13      valid_1's l2: 7.70956e+13
+[64]    training's l2: 3.58647e+13      valid_1's l2: 7.63543e+13
+[65]    training's l2: 3.5657e+13       valid_1's l2: 7.65005e+13
+[66]    training's l2: 3.54114e+13      valid_1's l2: 7.63277e+13
+[67]    training's l2: 3.52837e+13      valid_1's l2: 7.65997e+13
+[68]    training's l2: 3.5102e+13       valid_1's l2: 7.67299e+13
+[69]    training's l2: 3.4873e+13       valid_1's l2: 7.60451e+13
+[70]    training's l2: 3.4717e+13       valid_1's l2: 7.59928e+13
+[71]    training's l2: 3.45041e+13      valid_1's l2: 7.54082e+13
+[72]    training's l2: 3.43608e+13      valid_1's l2: 7.55095e+13
+[73]    training's l2: 3.42076e+13      valid_1's l2: 7.57111e+13
+[74]    training's l2: 3.40016e+13      valid_1's l2: 7.58959e+13
+[75]    training's l2: 3.38073e+13      valid_1's l2: 7.52838e+13
+[76]    training's l2: 3.36902e+13      valid_1's l2: 7.53913e+13
+[77]    training's l2: 3.35268e+13      valid_1's l2: 7.48384e+13
+[78]    training's l2: 3.33742e+13      valid_1's l2: 7.51345e+13
+[79]    training's l2: 3.32534e+13      valid_1's l2: 7.53401e+13
+[80]    training's l2: 3.3094e+13       valid_1's l2: 7.52294e+13
+[81]    training's l2: 3.29567e+13      valid_1's l2: 7.54626e+13
+[82]    training's l2: 3.28164e+13      valid_1's l2: 7.49659e+13
+[83]    training's l2: 3.26881e+13      valid_1's l2: 7.52465e+13
+[84]    training's l2: 3.26159e+13      valid_1's l2: 7.54346e+13
+[85]    training's l2: 3.24416e+13      valid_1's l2: 7.58709e+13
+[86]    training's l2: 3.22744e+13      valid_1's l2: 7.54066e+13
+[87]    training's l2: 3.21503e+13      valid_1's l2: 7.53397e+13
+[88]    training's l2: 3.20369e+13      valid_1's l2: 7.55491e+13
+[89]    training's l2: 3.18598e+13      valid_1's l2: 7.57048e+13
+[90]    training's l2: 3.1731e+13       valid_1's l2: 7.52266e+13
+[91]    training's l2: 3.16186e+13      valid_1's l2: 7.54448e+13
+[92]    training's l2: 3.14887e+13      valid_1's l2: 7.569e+13
+[93]    training's l2: 3.13377e+13      valid_1's l2: 7.59717e+13
+[94]    training's l2: 3.12425e+13      valid_1's l2: 7.59964e+13
+[95]    training's l2: 3.11106e+13      valid_1's l2: 7.58429e+13
+[96]    training's l2: 3.10306e+13      valid_1's l2: 7.59476e+13
+[97]    training's l2: 3.0957e+13       valid_1's l2: 7.57566e+13
+[98]    training's l2: 3.08786e+13      valid_1's l2: 7.58979e+13
+[99]    training's l2: 3.07693e+13      valid_1's l2: 7.56841e+13
+[100]   training's l2: 3.06944e+13      valid_1's l2: 7.57233e+13
+[101]   training's l2: 3.06297e+13      valid_1's l2: 7.54954e+13
+[102]   training's l2: 3.05591e+13      valid_1's l2: 7.56197e+13
+[103]   training's l2: 3.04501e+13      valid_1's l2: 7.58408e+13
+[104]   training's l2: 3.03877e+13      valid_1's l2: 7.56605e+13
+[105]   training's l2: 3.03226e+13      valid_1's l2: 7.57971e+13
+[106]   training's l2: 3.01709e+13      valid_1's l2: 7.55638e+13
+[107]   training's l2: 3.01068e+13      valid_1's l2: 7.565e+13
+[108]   training's l2: 3.00272e+13      valid_1's l2: 7.53291e+13
+[109]   training's l2: 2.99131e+13      valid_1's l2: 7.56031e+13
+[110]   training's l2: 2.98434e+13      valid_1's l2: 7.52972e+13
+[111]   training's l2: 2.97764e+13      valid_1's l2: 7.54164e+13
+[112]   training's l2: 2.96561e+13      valid_1's l2: 7.53405e+13
+[113]   training's l2: 2.9551e+13       valid_1's l2: 7.5378e+13
+[114]   training's l2: 2.94185e+13      valid_1's l2: 7.51637e+13
+[115]   training's l2: 2.93565e+13      valid_1's l2: 7.5183e+13
+[116]   training's l2: 2.91847e+13      valid_1's l2: 7.47111e+13
+[117]   training's l2: 2.907e+13        valid_1's l2: 7.46324e+13
+[118]   training's l2: 2.89519e+13      valid_1's l2: 7.40669e+13
+[119]   training's l2: 2.88018e+13      valid_1's l2: 7.36434e+13
+[120]   training's l2: 2.87451e+13      valid_1's l2: 7.37152e+13
+[121]   training's l2: 2.86595e+13      valid_1's l2: 7.36269e+13
+[122]   training's l2: 2.85483e+13      valid_1's l2: 7.38175e+13
+[123]   training's l2: 2.84854e+13      valid_1's l2: 7.35279e+13
+[124]   training's l2: 2.84273e+13      valid_1's l2: 7.36351e+13
+[125]   training's l2: 2.83395e+13      valid_1's l2: 7.3964e+13
+[126]   training's l2: 2.82908e+13      valid_1's l2: 7.37974e+13
+[127]   training's l2: 2.82045e+13      valid_1's l2: 7.38216e+13
+[128]   training's l2: 2.80953e+13      valid_1's l2: 7.37502e+13
+[129]   training's l2: 2.80184e+13      valid_1's l2: 7.37899e+13
+[130]   training's l2: 2.79238e+13      valid_1's l2: 7.32595e+13
+[131]   training's l2: 2.78657e+13      valid_1's l2: 7.33418e+13
+[132]   training's l2: 2.77679e+13      valid_1's l2: 7.32818e+13
+[133]   training's l2: 2.7684e+13       valid_1's l2: 7.28564e+13
+[134]   training's l2: 2.75949e+13      valid_1's l2: 7.30372e+13
+[135]   training's l2: 2.75131e+13      valid_1's l2: 7.25555e+13
+[136]   training's l2: 2.74443e+13      valid_1's l2: 7.25792e+13
+[137]   training's l2: 2.73495e+13      valid_1's l2: 7.25192e+13
+[138]   training's l2: 2.72885e+13      valid_1's l2: 7.25644e+13
+[139]   training's l2: 2.72053e+13      valid_1's l2: 7.2528e+13
+[140]   training's l2: 2.71307e+13      valid_1's l2: 7.20713e+13
+[141]   training's l2: 2.70502e+13      valid_1's l2: 7.22542e+13
+[142]   training's l2: 2.69645e+13      valid_1's l2: 7.24064e+13
+[143]   training's l2: 2.69133e+13      valid_1's l2: 7.25385e+13
+[144]   training's l2: 2.68466e+13      valid_1's l2: 7.27118e+13
+[145]   training's l2: 2.67886e+13      valid_1's l2: 7.28426e+13
+[146]   training's l2: 2.67073e+13      valid_1's l2: 7.2687e+13
+[147]   training's l2: 2.66478e+13      valid_1's l2: 7.2542e+13
+[148]   training's l2: 2.65567e+13      valid_1's l2: 7.21822e+13
+[149]   training's l2: 2.6483e+13       valid_1's l2: 7.23452e+13
+[150]   training's l2: 2.64311e+13      valid_1's l2: 7.21978e+13
+[151]   training's l2: 2.63752e+13      valid_1's l2: 7.22556e+13
+[152]   training's l2: 2.63315e+13      valid_1's l2: 7.21081e+13
+[153]   training's l2: 2.62577e+13      valid_1's l2: 7.23264e+13
+[154]   training's l2: 2.6215e+13       valid_1's l2: 7.24144e+13
+[155]   training's l2: 2.61728e+13      valid_1's l2: 7.22652e+13
+[156]   training's l2: 2.61217e+13      valid_1's l2: 7.23572e+13
+[157]   training's l2: 2.60851e+13      valid_1's l2: 7.22097e+13
+[158]   training's l2: 2.60185e+13      valid_1's l2: 7.18457e+13
+[159]   training's l2: 2.59748e+13      valid_1's l2: 7.19386e+13
+[160]   training's l2: 2.59174e+13      valid_1's l2: 7.19798e+13
+[161]   training's l2: 2.58828e+13      valid_1's l2: 7.18268e+13
+[162]   training's l2: 2.58164e+13      valid_1's l2: 7.14858e+13
+[163]   training's l2: 2.57708e+13      valid_1's l2: 7.15918e+13
+[164]   training's l2: 2.57306e+13      valid_1's l2: 7.17102e+13
+[165]   training's l2: 2.5694e+13       valid_1's l2: 7.15679e+13
+[166]   training's l2: 2.55436e+13      valid_1's l2: 7.11277e+13
+[167]   training's l2: 2.55023e+13      valid_1's l2: 7.12845e+13
+[168]   training's l2: 2.54474e+13      valid_1's l2: 7.11546e+13
+[169]   training's l2: 2.54092e+13      valid_1's l2: 7.12542e+13
+[170]   training's l2: 2.53758e+13      valid_1's l2: 7.11082e+13
+[171]   training's l2: 2.53393e+13      valid_1's l2: 7.12093e+13
+[172]   training's l2: 2.5295e+13       valid_1's l2: 7.12775e+13
+[173]   training's l2: 2.51899e+13      valid_1's l2: 7.09281e+13
+[174]   training's l2: 2.51577e+13      valid_1's l2: 7.07748e+13
+[175]   training's l2: 2.50325e+13      valid_1's l2: 7.08088e+13
+[176]   training's l2: 2.50006e+13      valid_1's l2: 7.06412e+13
+[177]   training's l2: 2.49578e+13      valid_1's l2: 7.05088e+13
+[178]   training's l2: 2.48591e+13      valid_1's l2: 7.0461e+13
+[179]   training's l2: 2.48188e+13      valid_1's l2: 7.05685e+13
+[180]   training's l2: 2.47546e+13      valid_1's l2: 7.05004e+13
+Model training complete.
+Epoch history plot saved to c:\Users\User\Documents\Online Projects\Ai\Machine Learning\Construction models\Mepfs_high_accuracy_model\visualizations\epoch_history.png
+Training Accuracy (R²): 83.87%
+Testing Accuracy (R²): 62.70%
+Actual vs. Predicted plot for Training set saved to c:\Users\User\Documents\Online Projects\Ai\Machine Learning\Construction models\Mepfs_high_accuracy_model\visualizations\training_actual_vs_predicted.png
+Actual vs. Predicted plot for Testing set saved to c:\Users\User\Documents\Online Projects\Ai\Machine Learning\Construction models\Mepfs_high_accuracy_model\visualizations\testing_actual_vs_predicted.png
+
+Trained model saved to c:\Users\User\Documents\Online Projects\Ai\Machine Learning\Construction models\Mepfs_high_accuracy_model\models\mepfs_budget_model_lgbm.joblib

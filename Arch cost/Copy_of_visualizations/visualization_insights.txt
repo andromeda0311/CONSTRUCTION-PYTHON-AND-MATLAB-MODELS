@@ -1,0 +1,17 @@
+Here are the insights for each visualization in the `c:\Users\User\Documents\MATLAB\Arch cost\visualizations` folder:
+
+*   **`actual_vs_predicted_architectural.png`**: This visualization likely compares the actual architectural costs with the costs predicted by a model. A tight clustering of points around a 45-degree line would indicate a high level of accuracy for the model. Deviations from this line would highlight where the model is over or under-predicting costs.
+
+*   **`budget_distributions_comparison_architectural.png`**: This plot probably shows how the budget is distributed. It might compare the distribution of the overall project budget to the architectural cost portion, or compare budget distributions across different types of projects. This can be useful for understanding the typical allocation for architectural work.
+
+*   **`correlation_matrix_after_architectural.png`**: This is likely a heatmap that shows the correlation between different variables *after* data processing. This is important for understanding the relationships between features that are used in the model, and can help in identifying multicollinearity.
+
+*   **`correlation_matrix_before_architectural.png`**: This visualization probably shows the initial correlations between the raw variables before any data cleaning or feature engineering. Comparing this with the "after" matrix can show the impact of data preprocessing steps.
+
+*   **`feature_importance_baseline_architectural.png`**: This chart would rank the architectural features based on their importance in a baseline prediction model. This helps to identify which factors have the most significant impact on cost from the start.
+
+*   **`feature_importance_final_architectural.png`**: This visualization would show the feature importance for the final, tuned model. Comparing this to the baseline can reveal how model optimization has shifted the importance of different features.
+
+*   **`performance_comparison_architectural.png`**: This is likely a chart that compares key performance metrics (like accuracy, precision, or error rates) of different architectural cost prediction models. This is crucial for selecting the best-performing model.
+
+*   **`residual_plot_architectural.png`**: This plot would show the errors (residuals) of the model's predictions. A random scatter of points around the zero line suggests that the model is well-fitted. Patterns in the residuals could indicate underlying problems with the model, such as non-linearity or heteroscedasticity.

@@ -1,0 +1,118 @@
+Environment cleared.
+Created 'visualizations' directory.
+
+--- Section 2: Data Loading & Cleaning ---
+Dataset 'MEPFS_Total_Cost.csv' loaded successfully.
+Column headers cleaned and duplicates resolved.
+Detected and standardized budget column: budget
+Data cleaning and type conversion complete.
+
+--- Section 3: Feature Engineering & Visualizations ---
+Saved: correlation_matrix_before_mepfs.png
+Saved: budget_distributions_comparison_mepfs.png
+Feature engineering complete.
+
+--- Section 4: Preparing Data for Models ---
+Using the following features to prevent data leakage:
+    {'year'                         }
+    {'num_storeys'                  }
+    {'num_classrooms'               }
+    {'total_electrical_cost'        }
+    {'total_plumbing_sewer_cost'    }
+    {'electrical_cost_per_classroom'}
+    {'plumbing_cost_per_classroom'  }
+    {'fire_alarm_cost_per_classroom'}
+
+Saved: correlation_matrix_after_mepfs_upgraded.png
+Generated 44 polynomial features (up to degree 2).
+Generated 44 polynomial features (up to degree 2).
+Data has been split, transformed, and scaled.
+
+--- Section 5: Baseline Model Performance ---
+Baseline Model R-squared: 0.8321
+Baseline Model MAE: 3397275.38
+
+--- Section 6: Feature Selection ---
+Saved: feature_importance_baseline_mepfs_upgraded.png
+Feature count after selection: 22
+
+--- Section 7: Training Optimized Model ---
+|====================================================================================================================|
+| Iter | Eval   | Objective:  | Objective   | BestSoFar   | BestSoFar   | NumLearningC-| MaxNumSplits |    LearnRate |
+|      | result | log(1+loss) | runtime     | (observed)  | (estim.)    | ycles        |              |              |
+|====================================================================================================================|
+|    1 | Best   |     0.10856 |      4.7678 |     0.10856 |     0.10856 |          571 |           26 |     0.010935 |
+|    2 | Accept |     0.11026 |      7.2235 |     0.10856 |     0.10941 |          840 |           17 |     0.043609 |
+|    3 | Best   |     0.10502 |      12.595 |     0.10502 |     0.10794 |          944 |           13 |     0.012074 |
+|    4 | Best   |    0.096669 |      21.474 |    0.096669 |    0.097355 |          566 |           12 |      0.01384 |
+|    5 | Accept |    0.098743 |       20.79 |    0.096669 |    0.098043 |          549 |           12 |      0.01789 |
+|    6 | Best   |    0.093679 |      32.987 |    0.093679 |    0.094346 |          865 |           12 |     0.099564 |
+|    7 | Accept |    0.096478 |      37.729 |    0.093679 |    0.096062 |          999 |           12 |     0.050904 |
+|    8 | Accept |    0.096375 |      36.105 |    0.093679 |    0.094523 |          957 |           12 |     0.099909 |
+|    9 | Accept |    0.097531 |      30.624 |    0.093679 |    0.095785 |          789 |           12 |     0.023815 |
+|   10 | Accept |    0.094676 |       25.62 |    0.093679 |    0.095383 |          670 |           12 |     0.099733 |
+|   11 | Accept |    0.096429 |      32.523 |    0.093679 |    0.095633 |          856 |           12 |     0.099914 |
+|   12 | Accept |     0.10988 |      36.215 |    0.093679 |    0.095653 |          966 |           19 |      0.02363 |
+|   13 | Accept |    0.095761 |      20.192 |    0.093679 |    0.095604 |          529 |           11 |     0.023374 |
+|   14 | Accept |    0.094259 |      37.906 |    0.093679 |    0.094444 |          980 |           11 |     0.099966 |
+|   15 | Accept |    0.095551 |      28.936 |    0.093679 |      0.0949 |          778 |           11 |     0.099572 |
+|   16 | Accept |    0.095892 |      24.576 |    0.093679 |    0.095189 |          651 |           11 |     0.099594 |
+|   17 | Accept |    0.098163 |      30.605 |    0.093679 |    0.095765 |          784 |           11 |     0.099552 |
+|   18 | Accept |     0.10909 |      38.565 |    0.093679 |    0.095777 |          972 |           32 |     0.099079 |
+|   19 | Best   |    0.092531 |      27.782 |    0.092531 |    0.092993 |          733 |            8 |         0.01 |
+|   20 | Best   |    0.091291 |      31.866 |    0.091291 |     0.09201 |          849 |            9 |      0.01002 |
+|====================================================================================================================|
+| Iter | Eval   | Objective:  | Objective   | BestSoFar   | BestSoFar   | NumLearningC-| MaxNumSplits |    LearnRate |
+|      | result | log(1+loss) | runtime     | (observed)  | (estim.)    | ycles        |              |              |
+|====================================================================================================================|
+|   21 | Accept |    0.091732 |      24.898 |    0.091291 |    0.091866 |          638 |            9 |     0.010021 |
+|   22 | Accept |    0.092099 |      33.681 |    0.091291 |    0.091915 |          922 |            9 |     0.010005 |
+|   23 | Accept |    0.091591 |      26.895 |    0.091291 |    0.091786 |          733 |            9 |     0.010045 |
+|   24 | Accept |    0.094577 |      26.776 |    0.091291 |    0.091781 |          738 |            8 |     0.096302 |
+|   25 | Accept |     0.11091 |      31.601 |    0.091291 |    0.091796 |          840 |           23 |     0.099838 |
+|   26 | Accept |      0.1108 |      22.069 |    0.091291 |    0.091899 |          567 |           29 |     0.010054 |
+|   27 | Accept |     0.10925 |      38.242 |    0.091291 |    0.091829 |          980 |           28 |     0.099412 |
+|   28 | Accept |     0.11095 |      21.252 |    0.091291 |    0.091941 |          569 |           21 |     0.010024 |
+|   29 | Accept |     0.10844 |       23.65 |    0.091291 |    0.091851 |          618 |           32 |     0.010037 |
+|   30 | Accept |     0.10562 |      39.579 |    0.091291 |    0.092018 |          974 |           15 |      0.09933 |
+
+__________________________________________________________
+Optimization completed.
+MaxObjectiveEvaluations of 30 reached.
+Total function evaluations: 30
+Total elapsed time: 834.7415 seconds
+Total objective function evaluation time: 827.7254
+
+Best observed feasible point:
+    NumLearningCycles    MaxNumSplits    LearnRate
+    _________________    ____________    _________
+
+           849                9           0.01002 
+
+Observed objective function value = 0.091291
+Estimated objective function value = 0.092017
+Function evaluation time = 31.8655
+
+Best estimated feasible point (according to models):
+    NumLearningCycles    MaxNumSplits    LearnRate
+    _________________    ____________    _________
+
+           733                9          0.010045 
+
+Estimated objective function value = 0.092018
+Estimated function evaluation time = 27.3037
+
+
+--- Section 8: Final Model Evaluation & Visualizations ---
+Final Optimized Model R-squared: 0.8430
+Final Optimized Model MAE: 3382932.36
+Saved: actual_vs_predicted_mepfs.png
+Saved: residual_plot_mepfs.png
+Saved: feature_importance_final_mepfs.png
+Saved: performance_comparison_mepfs.png
+
+--- Section 9: Saving Final Assets ---
+All model assets saved to 'mepfs_model_assets.mat'.
+
+Process finished.
+>> 

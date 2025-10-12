@@ -1,0 +1,316 @@
+MEPFS Cost: Training and Visualization Notes
+
+Explanation (MEPFS - Mechanical, Electrical, Plumbing, Fire Protection, and Sanitation)
+
+Pipeline summary (training and evaluation)
+1) Data loading and cleaning
+   - Loads MEPFS_Total_Cost.csv with preserved headers.
+   - Normalizes column names (lowercase, valid/unique), drops "unnamed*" columns.
+   - Detects the budget column (case-insensitive), standardizes its name to "budget".
+   - Converts numeric-looking text (commas) to doubles and removes rows with NaN budget.
+   - Median-imputes all numeric missing values.
+
+2) Target transform and filtering
+   - Creates budget_log = log1p(budget) to stabilize variance and reduce skew.
+   - Filters to projects with budget > 100,000 (removes extreme small values and outliers on the low end).
+
+3) Feature engineering (MEPFS-specific)
+   - Extracts num_storeys and num_classrooms from the "project" string via regex.
+   - Uses MEAN imputation (rounded) for storeys/classrooms as it's more representative for building count data.
+   - Dynamically finds MEPFS-specific columns:
+     * Electrical: panelboard, lightingfixtures, conduits, wires
+     * Plumbing/Sanitation: sewerline, plumbingfixtures
+     * Fire Protection: firealarm
+   - Builds cost aggregations:
+     * total_electrical_cost = panelboard + lighting + conduits + wires
+     * total_plumbing_sewer_cost = sewerline + plumbing fixtures
+   - Builds powerful per-unit ratios:
+     * electrical_cost_per_classroom
+     * plumbing_cost_per_classroom
+     * fire_alarm_cost_per_classroom
+   - Replaces inf/NaN with 0 to handle division by zero cases.
+
+4) Feature set and split
+   - Final features used (reduced multicollinearity strategy):
+     year, num_storeys, num_classrooms,
+     total_electrical_cost, total_plumbing_sewer_cost,
+     electrical_cost_per_classroom, plumbing_cost_per_classroom, fire_alarm_cost_per_classroom
+   - 80/20 HoldOut split (random each run; no fixed seed).
+
+5) Expansion and scaling
+   - Generates polynomial features up to degree 2 from the final features (44 features total).
+   - Standardizes with z-score (stores mu, sigma for reuse).
+
+6) Baseline model (upgraded)
+   - Gradient boosting (LSBoost) with 250 trees and LearnRate=0.1 (more powerful than Arch baseline).
+   - Evaluates on test set; prints R-squared and MAE after inverting the log transform (expm1).
+   - Baseline R²: 0.8321, MAE: 3,397,275.38
+
+7) Feature selection
+   - Uses predictorImportance from the baseline booster.
+   - Keeps features with importance above the median (22 features selected from 44).
+
+8) Optimized model
+   - Tunes LSBoost hyperparameters:
+     * NumLearningCycles [500–1000]
+     * MaxNumSplits [8–32]
+     * LearnRate [0.01–0.1] (log-scaled)
+   - Best hyperparameters found: 849 cycles, 9 splits, LearnRate=0.01002
+   - Final R²: 0.8430, MAE: 3,382,932.36
+   - Improvement: +1.09% R², -14,343 MAE
+
+9) Assets saved
+   - mepfs_model_assets.mat includes:
+     optimized_model, mu, sigma, selected_mask, final_feature_columns, poly_feature_names.
+
+
+Visualizations and honest interpretation
+
+1) Correlation Matrix (Before Feature Engineering)
+   File: visualizations/correlation_matrix_before_mepfs.png
+   What it shows:
+   - Pairwise Pearson correlations among all raw numeric features from MEPFS dataset.
+   How to read:
+   - Brighter/warmer colors indicate stronger positive correlations; cooler colors indicate negative correlations.
+   Honest interpretation:
+   - MEPFS systems often show very high correlations between related cost components (e.g., wires and conduits, or plumbing fixtures and sewer lines) because they scale together with building size.
+   - High correlations (>0.8) between electrical components suggest they're essentially measuring the same underlying complexity—including all would lead to multicollinearity in linear models.
+   - Tree-based models handle this better, but feature engineering to create aggregated features reduces redundancy and improves interpretability.
+   - Correlation ≠ causation: strong correlations may reflect shared drivers (building size, complexity) rather than direct relationships.
+
+2) Budget Distributions (Skewed vs. Log-Transformed)
+   File: visualizations/budget_distributions_comparison_mepfs.png
+   What it shows:
+   - Left: raw budget distribution (right-skewed, with long tail toward high budgets).
+   - Right: log1p(budget) distribution (more symmetric, approximately normal).
+   Honest interpretation:
+   - MEPFS budgets span wide ranges because systems scale with building complexity—small schools need basic electrical/plumbing, large multi-story schools need extensive systems.
+   - The log transform compresses the range, making the model treat percentage errors more uniformly across budget scales.
+   - Filtering budget > 100,000 removes very small projects that may represent partial renovations or data errors, focusing the model on complete MEPFS installations.
+   - Trade-off: this improves training stability but may reduce generalization to small-scale MEPFS projects.
+
+3) Correlation Matrix (After Feature Engineering)
+   File: visualizations/correlation_matrix_after_mepfs_upgraded.png
+   What it shows:
+   - Correlations among the 8 engineered final features (before polynomial expansion).
+   Honest interpretation:
+   - total_electrical_cost and total_plumbing_sewer_cost should show moderate correlation with num_classrooms and num_storeys (larger buildings need more systems).
+   - The per-classroom ratios (electrical_cost_per_classroom, etc.) should be less correlated with raw counts, indicating they capture intensity/quality rather than just scale.
+   - Lower correlations among final features compared to raw features indicate successful dimensionality reduction and multicollinearity mitigation.
+   - If year shows weak correlation with costs, it suggests MEPFS pricing is relatively stable over time (unlike materials-driven categories like Architectural).
+   - Use this to validate feature engineering logic, but remember correlations don't imply which features the model will find most predictive.
+
+4) Baseline Feature Importance (Top 20)
+   File: visualizations/feature_importance_baseline_mepfs_upgraded.png
+   What it shows:
+   - The 20 polynomial features (including interactions) with highest gain in the baseline LSBoost model.
+   Honest interpretation:
+   - Expect squared terms of total costs (e.g., total_electrical_cost^2) to rank high because MEPFS costs scale non-linearly with building size (larger projects have disproportionately higher per-unit costs due to complexity).
+   - Interaction terms like num_classrooms × total_electrical_cost capture how electrical needs grow with classroom count.
+   - If per-classroom ratios rank high, it suggests the model values intensity metrics beyond raw scale.
+   - Importances reflect split gain, not causal effect—correlated features can split shared importance.
+   - Use this to identify which engineered features are being exploited by the model, but don't interpret as "X causes cost to increase by Y."
+
+5) Actual vs. Predicted (Test Set)
+   File: visualizations/actual_vs_predicted_mepfs.png
+   What it shows:
+   - Scatter plot of actual vs predicted budget (after inverting log) with y=x diagonal reference line.
+   Honest interpretation:
+   - Points tightly clustered around the diagonal indicate good calibration—the model is neither systematically over- nor under-predicting.
+   - Wider spread at high budgets (>20M) suggests the model has more uncertainty for very large/complex MEPFS projects—likely because training data has fewer examples in that range.
+   - Systematic deviations (e.g., predictions consistently below diagonal at high end) would indicate bias; this should be investigated by checking if large projects have unique characteristics not captured by features.
+   - R² = 0.843 means 84.3% of budget variance is explained—reasonably strong, but 15.7% remains unexplained (could be project-specific factors, regional pricing, or contractor variability).
+   - A few outliers far from the diagonal warrant investigation: data errors, unique project types, or missing features.
+
+6) Residual Plot (Test Set)
+   File: visualizations/residual_plot_mepfs.png
+   What it shows:
+   - Residuals (Actual − Predicted) vs Predicted budget, with horizontal zero line.
+   Honest interpretation:
+   - Ideally, residuals should be randomly scattered around zero with no pattern (constant variance, no trends).
+   - Fan/funnel shape (residuals spread wider as predictions increase) indicates heteroskedasticity—the model is less precise for high-budget projects. This is common and reflects real-world variability (large projects have more variable execution costs).
+   - If residuals show curvature (e.g., positive at low/high ends, negative in middle), it suggests remaining non-linearity not captured by degree-2 polynomials—consider degree-3 or spline features.
+   - Outliers with large negative residuals (model over-predicted) may be projects that achieved cost efficiencies; large positive residuals (under-predicted) may indicate scope creep or unforeseen complications.
+   - The model's MAE of ~3.4M on projects averaging ~15-20M means typical errors are ~17-23%—reasonable but suggests room for improvement with more features or data.
+
+7) Final Model Feature Importance (Top 20)
+   File: visualizations/feature_importance_final_mepfs.png
+   What it shows:
+   - Importances after feature selection (22 features) and hyperparameter tuning.
+   Honest interpretation:
+   - Changes in ranking vs. baseline suggest the optimized model found different useful patterns—often exploiting interactions more deeply with the tuned MaxNumSplits and LearnRate.
+   - If year drops in importance, the model relies more on building-specific features than temporal trends (good for generalization across time).
+   - If per-classroom ratios gain importance, the model learned that cost intensity matters as much as scale.
+   - Still subject to correlation bias—permutation importance or SHAP would give more robust causal insights.
+   - Top features guide future data collection priorities: if electrical_cost_per_classroom is critical, ensure accurate classroom counts and electrical scope tracking.
+
+8) Performance Comparison (Baseline vs Optimized)
+   File: visualizations/performance_comparison_mepfs.png
+   What it shows:
+   - Side-by-side bars for R² and MAE, comparing baseline and optimized models.
+   Honest interpretation:
+   - R² improved from 0.832 to 0.843 (+1.3% relative improvement)—modest but meaningful, indicating hyperparameter tuning and feature selection helped.
+   - MAE improved from 3,397,275 to 3,382,932 (−14,343 or −0.4%)—small absolute improvement suggests the model is approaching its predictive ceiling given current features.
+   - Diminishing returns from optimization suggest:
+     a) Current features capture most explainable variance.
+     b) Remaining error is due to unmeasured factors (contractor efficiency, regional pricing, design changes).
+     c) More data or new features (e.g., building footprint, equipment specifications) needed for further gains.
+   - Single 80/20 split can fluctuate; use 5-fold CV for more stable estimates.
+   - For production use, the optimized model is preferred, but the small improvement means baseline is also viable if speed matters.
+
+
+Key caveats and recommendations
+
+- Randomness: Results vary between runs due to random HoldOut. For reproducibility, set rng(42) before cvpartition.
+
+- MEPFS-specific challenges:
+  * MEPFS costs depend on equipment specifications (e.g., chiller capacity, panel ratings) not captured in current features.
+  * Regional labor/material costs can vary significantly—consider adding location features if data spans multiple regions.
+  * Temporal effects (inflation, code changes) may be underrepresented if dataset spans many years.
+
+- Feature engineering quality:
+  * Per-classroom ratios assume classrooms are a good proxy for occupancy/complexity—validate this assumption for non-classroom spaces (labs, auditoriums).
+  * Total costs aggregate heterogeneous items (panelboards ≠ wires)—consider more granular features if performance plateaus.
+
+- Data leakage: Current features avoid target-derived quantities. Ensure all features are known at bidding time.
+
+- Scale effects: Even with log transform, very large projects (>30M) show larger errors—consider separate models or stratification by project size.
+
+- Explainability: Gain-based importance can mislead with correlated features. Use permutation importance or SHAP for stakeholder communication.
+
+- Robustness: If "year" spans a wide range, validate on time-based split to check temporal generalization. Monitor for concept drift (changing MEPFS standards/costs over time).
+
+- Model limitations:
+  * R² = 0.843 is good but not excellent—15.7% unexplained variance may include:
+    - Design efficiency (good design = lower costs)
+    - Contractor competitiveness (bid environment)
+    - Project schedule constraints (rush jobs cost more)
+    - Equipment brand/quality choices
+  * Consider collecting more granular data (equipment specs, contractor experience, schedule) for future iterations.
+
+
+Files referenced
+- Visuals:
+  - visualizations/correlation_matrix_before_mepfs.png
+  - visualizations/budget_distributions_comparison_mepfs.png
+  - visualizations/correlation_matrix_after_mepfs_upgraded.png
+  - visualizations/feature_importance_baseline_mepfs_upgraded.png
+  - visualizations/actual_vs_predicted_mepfs.png
+  - visualizations/residual_plot_mepfs.png
+  - visualizations/feature_importance_final_mepfs.png
+  - visualizations/performance_comparison_mepfs.png
+- Script:
+  - main.m (end-to-end pipeline that generated the above)
+- Assets:
+  - mepfs_model_assets.mat (trained model and preprocessing parameters)
+
+
+---
+
+MATLAB Code Walkthrough (Section by Section)
+
+Section 1: Setup
+- Clears workspace, command window, and figures.
+- Ensures a 'visualizations' folder exists for saving plots.
+
+Section 2: Data Loading and Cleaning
+- Loads MEPFS_Total_Cost.csv with preserved headers (detectImportOptions + readtable).
+- Cleans headers: lowercased, valid, unique; drops any columns starting with 'unnamed'.
+- Detects and standardizes the target column to 'budget' (case-insensitive search).
+- Converts text-with-commas numeric fields to double; removes rows with missing budget.
+- Median-imputes all remaining numeric NaNs.
+
+Section 3: Feature Engineering and Initial Visuals
+- Saves correlation matrix of raw numeric columns (before engineering).
+- Adds budget_log = log1p(budget) and filters to budget > 100000.
+- Extracts from project text: num_storeys via '(\d+)\s*STY' and num_classrooms via '(\d+)\s*CL'.
+- UPGRADE: Uses MEAN (rounded) for imputation of storeys/classrooms instead of median—more representative for count data.
+- Dynamically finds MEPFS-specific columns by name patterns:
+  - Electrical: panelboard, lightingfixtures, conduits, wires
+  - Plumbing/Sanitation: sewerline, plumbingfixtures
+  - Fire Protection: firealarm
+- Engineers cost aggregations:
+  - total_electrical_cost (sum of 4 electrical components)
+  - total_plumbing_sewer_cost (sum of 2 plumbing/sewer components)
+- Engineers per-unit ratios:
+  - electrical_cost_per_classroom
+  - plumbing_cost_per_classroom
+  - fire_alarm_cost_per_classroom
+- Replaces Inf/NaN with 0 to handle division by zero.
+- Saves budget distribution comparison (raw vs log) and correlation matrix after engineering.
+
+Section 4: Data Prep for Models
+- UPGRADE: Revised feature list to reduce multicollinearity—uses aggregated totals and per-classroom ratios instead of individual component costs.
+- Final features (8):
+  year, num_storeys, num_classrooms,
+  total_electrical_cost, total_plumbing_sewer_cost,
+  electrical_cost_per_classroom, plumbing_cost_per_classroom, fire_alarm_cost_per_classroom
+- Splits data via cvpartition HoldOut 0.2 into train/test.
+- Expands to degree-2 polynomial features (44 features total from 8 base features).
+- Standardizes with zscore on train; applies mu/sigma to test; fills scaling NaNs with 0.
+
+Section 5: Baseline Model
+- UPGRADE: Trains LSBoost ensemble with 250 cycles and LearnRate=0.1 (more powerful than Arch baseline's 100 cycles).
+- Predicts on test, inverts log (expm1), computes R-squared and MAE in currency units.
+- Reports: R² = 0.8321, MAE = 3,397,275.38
+
+Section 6: Feature Selection
+- Uses predictorImportance from baseline model.
+- Saves Top-20 importance plot (from 44 polynomial features).
+- Selects features with importance above the median threshold (22 features retained).
+
+Section 7: Optimized Model
+- Tunes NumLearningCycles [500–1000], MaxNumSplits [8–32], LearnRate [0.01–0.1] (log transform) using Bayesian optimization (30 iterations).
+- Best hyperparameters: 849 cycles, 9 splits, LearnRate=0.01002
+- Trains optimized_model on selected features.
+
+Section 8: Final Evaluation & Visuals
+- Predicts on test, computes final R-squared (0.8430) and MAE (3,382,932.36).
+- Saves plots:
+  - Actual vs Predicted scatter with diagonal reference
+  - Residuals vs Predicted with zero baseline
+  - Final Feature Importance (Top-20 from 22 selected features)
+  - Baseline vs Optimized performance comparison (R² and MAE bars)
+
+Section 9: Save Assets
+- Saves mepfs_model_assets.mat with optimized_model, mu, sigma, selected_mask, final_feature_columns, poly_feature_names.
+
+Notes and Tips
+- For reproducibility, call rng(42) before cvpartition.
+- Guard dynamic column detection (ensure exactly one match per pattern) to avoid indexing errors.
+- MEPFS models benefit from equipment-level features (panel capacity, fixture counts)—consider adding if available.
+- Consider permutation importance or SHAP for more robust interpretability in stakeholder presentations.
+- Monitor for temporal drift if dataset spans multiple years—validate on time-based splits.
+
+
+---
+
+MEPFS Cost: Story of the Training Pipeline
+
+The workspace is cleared and the stage is set. A visualizations folder opens to receive the performance record. The script welcomes MEPFS_Total_Cost.csv—a ledger of mechanical, electrical, plumbing, fire protection, and sanitation costs across school projects.
+
+First, the data undergoes purification. Column names are scrubbed lowercase, made valid and unique. Stray "unnamed" columns depart. The budget column—the star of the show—is located (even under aliases) and given a consistent name.
+
+Numbers hiding in text (with commas as disguises) shed their formatting and become doubles. Missing values are filled with medians—quiet restoration of balance. Rows with absent budgets leave the cast.
+
+The budget itself is reframed. Raw MEPFS budgets span enormous ranges—from small electrical upgrades to complete multi-story system installations. The log1p transform compresses this range, making patterns learnable across scales. Projects under 100,000 step aside to focus the model on complete installations.
+
+Feature engineering begins. From project descriptions, the script extracts num_storeys and num_classrooms via regex pattern matching. Missing counts are filled with rounded means—count data favors averages over medians.
+
+The script then locates MEPFS-specific cost columns: panelboards, lighting fixtures, conduits, wires for electrical; sewer lines and plumbing fixtures for water/waste; fire alarm systems for safety. These are composed into meaningful aggregations:
+- total_electrical_cost captures the full electrical scope
+- total_plumbing_sewer_cost captures water/waste systems
+
+But the script goes further—creating intensity metrics by dividing costs by classroom count, capturing not just scale but quality and complexity per space. Division errors (zero classrooms) are caught and set to zero.
+
+With 8 carefully engineered features, the data is split: 80% trains, 20% tests. To let the model discover non-linear relationships and interactions, polynomial features up to degree 2 are generated—44 features total. All are standardized via z-score so no single scale dominates learning.
+
+The baseline rehearsal begins: a gradient boosting regressor (LSBoost) with 250 trees and learning rate 0.1 learns from the scaled polynomial features. Its performance is judged on the test set in real currency (predictions brought back from log space), achieving R² = 0.832 and MAE = 3.4M.
+
+The script listens to which features contributed most (predictorImportance). Those above the median—22 of 44—keep their roles. The rest step back.
+
+With a leaner, focused cast, the final act is prepared. Bayesian optimization explores 30 combinations of learning cycles, split depth, and learning rate. After 835 seconds of exploration, the optimal configuration emerges: 849 cycles, 9 splits, learning rate 0.01002.
+
+The optimized model gives its final performance: R² = 0.843, MAE = 3.38M—modest improvement, suggesting the model is approaching its ceiling given current features. The visuals capture the journey: correlations before and after engineering, importances at baseline and final, calibration scatter, residuals, and a head-to-head performance comparison.
+
+At curtain call, everything needed for deployment is saved: the trained model, scaling parameters, feature selection mask, and feature names—ready to predict MEPFS costs for new projects with consistent preprocessing.

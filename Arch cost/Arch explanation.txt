@@ -1,0 +1,203 @@
+Architectural Cost: Training and Visualization Notes
+
+Explanation (Arch)
+
+Pipeline summary (training and evaluation)
+1) Data loading and cleaning
+   - Loads Architectural_Total_Cost.csv with preserved headers.
+   - Normalizes column names (lowercase, valid/unique), drops “unnamed*” columns.
+   - Detects the budget column (case-insensitive), standardizes its name to "budget".
+   - Converts numeric-looking text (commas) to doubles and removes rows with NaN budget.
+   - Median-imputes all numeric missing values.
+
+2) Target transform and filtering
+   - Creates budget_log = log1p(budget) to stabilize variance and reduce skew.
+   - Filters to projects with budget > 100,000 (removes extreme small values and outliers on the low end).
+
+3) Feature engineering
+   - Extracts num_storeys and num_classrooms from the “project” string via regex.
+   - Dynamically finds material/quantity columns for painting (masonry/wood/metal), CHB (100mm/150mm), and finishes (plaster/glazed tiles).
+   - Builds totals: total_painting_area, total_chb_area, total_finishes_area.
+   - Builds ratios: plaster_per_chb, tiles_per_chb; replaces inf/NaN with 0.
+
+4) Feature set and split
+   - Final features used:
+     year, num_storeys, num_classrooms, [plaster_col], [tiles_col],
+     total_painting_area, total_chb_area, total_finishes_area,
+     plaster_per_chb, tiles_per_chb
+   - 80/20 HoldOut split (random each run; no fixed seed).
+
+5) Expansion and scaling
+   - Generates polynomial features up to degree 2 from the final features.
+   - Standardizes with z-score (stores mu, sigma for reuse).
+
+6) Baseline model
+   - Gradient boosting (LSBoost) with 100 trees on all scaled polynomial features.
+   - Evaluates on test set; prints R-squared and MAE after inverting the log transform (expm1).
+
+7) Feature selection
+   - Uses predictorImportance from the baseline booster.
+   - Keeps features with importance above the median (simple filter).
+
+8) Optimized model
+   - Tunes LSBoost hyperparameters (NumLearningCycles, MaxNumSplits, LearnRate).
+   - Trains on the selected features; evaluates R-squared and MAE on the test set.
+
+9) Assets saved
+   - architectural_model_assets.mat includes:
+     optimized_model, mu, sigma, selected_mask, final_feature_columns, poly_feature_names.
+
+
+Visualizations and honest interpretation
+
+1) Correlation Matrix (Before Feature Engineering)
+   File: visualizations/correlation_matrix_before_architectural.png
+   What it shows:
+   - Pairwise Pearson correlations among all raw numeric features.
+   How to read:
+   - Brighter colors or larger magnitudes indicate stronger linear relationships.
+   Honest interpretation:
+   - High correlations point to multicollinearity risk if using linear models; tree ensembles are more tolerant but can still split on redundant features.
+   - Some correlations may be spurious (shared scale or units); correlation ≠ causation.
+   - Use this to anticipate which raw quantities likely move together (e.g., material areas).
+
+2) Budget Distributions (Skewed vs. Log-Transformed)
+   File: visualizations/budget_distributions_comparison_architectural.png
+   What it shows:
+   - Left: raw budget distribution (often right-skewed).
+   - Right: log1p(budget) distribution (more symmetric).
+   Honest interpretation:
+   - The log transform generally stabilizes variance and improves model fit and error interpretability across budget scales.
+   - Filtering budget > 100,000 reduces small-value noise but may limit generalization to smaller projects.
+
+3) Correlation Matrix (After Feature Engineering)
+   File: visualizations/correlation_matrix_after_architectural.png
+   What it shows:
+   - Correlations among engineered final features (before polynomial expansion).
+   Honest interpretation:
+   - Expected relationships (e.g., total_chb_area correlating with plaster_per_chb or finishes) can validate feature logic.
+   - Strong correlations among totals can indicate overlapping scope; ratios help normalize by size.
+   - Keep in mind correlations do not imply directional influence on cost.
+
+4) Baseline Feature Importance (Top 20)
+   File: visualizations/feature_importance_baseline_architectural.png
+   What it shows:
+   - The highest-gain features (including polynomial/interaction terms) used by the baseline booster.
+   Honest interpretation:
+   - Gradient-boosting importances reflect split gain, not causal effect size.
+   - Correlated predictors can share or shift importance; large totals or strong interactions often rank high.
+   - Use as a guide for pruning or for domain validation, not as sole evidence of drivers.
+
+5) Final Model Feature Importance (Top 20)
+   File: visualizations/feature_importance_final_architectural.png
+   What it shows:
+   - Importances after feature selection and hyperparameter tuning.
+   Honest interpretation:
+   - Shifts in ranking relative to baseline can indicate the tuned model exploiting different interactions or depths.
+   - Still subject to correlation bias; consider permutation importance or SHAP for more robust explanations.
+
+6) Actual vs. Predicted (Test Set)
+   File: visualizations/actual_vs_predicted_architectural.png
+   What it shows:
+   - Scatter of actual vs predicted budget (after inverting log), with y=x reference.
+   Honest interpretation:
+   - Tight clustering around the diagonal indicates good calibration; systematic under/over prediction shows as consistent offsets.
+   - Wider spread at high budgets can indicate remaining heteroskedasticity or insufficient signal for very large projects.
+
+7) Residual Plot (Test Set)
+   File: visualizations/residual_plot_architectural.png
+   What it shows:
+   - Residuals (Actual − Predicted) vs Predicted budget.
+   Honest interpretation:
+   - Ideally residuals are zero-mean and patternless. Fan/funnel shapes suggest heteroskedasticity (errors grow with scale).
+   - Curvature implies remaining nonlinearity not captured by current features/degree.
+   - Outliers may warrant data checks or robust loss functions.
+
+8) Performance Comparison (Baseline vs Optimized)
+   File: visualizations/performance_comparison_architectural.png
+   What it shows:
+   - Side-by-side R-squared and MAE for baseline and optimized models.
+   Honest interpretation:
+   - Expect modest to noticeable improvement after tuning and feature selection.
+   - MAE is in currency units of budget; interpret as average absolute error in monetary terms.
+   - Single random 80/20 split can fluctuate; use k-fold CV and a fixed rng for more stable estimates.
+
+Key caveats and recommendations
+- Randomness: Results change between runs due to random HoldOut. For reproducibility, set rng(seed) before cvpartition.
+- Data leakage: Final features avoid direct use of target-derived quantities. Continue to audit engineered features to ensure they are known pre-bid.
+- Scale effects: Even with log transform and scaling, very large projects may show larger absolute errors; consider quantile loss or stratified evaluation by size.
+- Explainability: For reliable interpretation, complement gain-based importance with permutation importance or SHAP on the final model.
+- Robustness: Validate on a time-based split if “year” encodes temporal drift; monitor generalization across project types.
+
+Files referenced
+- Visuals:
+  - visualizations/correlation_matrix_before_architectural.png
+  - visualizations/budget_distributions_comparison_architectural.png
+  - visualizations/correlation_matrix_after_architectural.png
+  - visualizations/feature_importance_baseline_architectural.png
+  - visualizations/feature_importance_final_architectural.png
+  - visualizations/actual_vs_predicted_architectural.png
+  - visualizations/residual_plot_architectural.png
+  - visualizations/performance_comparison_architectural.png
+- Script:
+  - main.m (end-to-end pipeline that generated the above)
+
+---
+
+MATLAB Code Walkthrough (Section by Section)
+
+Section 1: Setup
+- Clears workspace, command window, and figures.
+- Ensures a 'visualizations' folder exists for saving plots.
+
+Section 2: Data Loading and Cleaning
+- Loads Architectural_Total_Cost.csv with preserved headers (detectImportOptions + readtable).
+- Cleans headers: lowercased, valid, unique; drops any columns starting with 'unnamed'.
+- Detects and standardizes the target column to 'budget' (case-insensitive search).
+- Converts text-with-commas numeric fields to double; removes rows with missing budget.
+- Median-imputes all remaining numeric NaNs.
+
+Section 3: Feature Engineering and Initial Visuals
+- Saves correlation matrix of raw numeric columns (before engineering).
+- Adds budget_log = log1p(budget) and filters to budget > 100000 to focus on comparable scales.
+- Extracts from project text: num_storeys via '(\d+)\s*STY' and num_classrooms via '(\d+)\s*CL'; median-fills if missing.
+- Dynamically finds key columns by name patterns:
+  - paintingmasonry, paintingwood, paintingmetal
+  - chb100mm, chb150mm
+  - plaster, glazedtiles
+- Engineers totals: total_painting_area, total_chb_area, total_finishes_area.
+- Engineers ratios: plaster_per_chb, tiles_per_chb; replaces Inf/NaN with 0.
+- Saves budget distribution comparison (raw vs log) and correlation matrix after engineering.
+
+Section 4: Data Prep for Models
+- Selects final features:
+  year, num_storeys, num_classrooms, [plaster_col], [tiles_col],
+  total_painting_area, total_chb_area, total_finishes_area,
+  plaster_per_chb, tiles_per_chb
+- Splits data via cvpartition HoldOut 0.2 into train/test.
+- Expands to degree-2 polynomial features (generatePolyFeatures).
+- Standardizes with zscore on train; applies mu/sigma to test; fills scaling NaNs with 0.
+
+Section 5: Baseline Model
+- Trains LSBoost ensemble (fitrensemble) with 100 learning cycles on scaled polynomial features.
+- Predicts on test, inverts log (expm1), computes R-squared and MAE in currency units.
+
+Section 6: Feature Selection
+- Uses predictorImportance from baseline model.
+- Saves Top-20 importance plot and selects features with importance above the median threshold.
+
+Section 7: Optimized Model
+- Tunes NumLearningCycles [500–1000], MaxNumSplits [8–32], LearnRate [0.01–0.1] (log transform) using OptimizeHyperparameters.
+- Trains optimized_model on selected features.
+
+Section 8: Final Evaluation & Visuals
+- Predicts on test, computes final R-squared and MAE.
+- Saves plots: Actual vs Predicted, Residuals vs Predicted, Final Feature Importance (Top-20), and Baseline vs Optimized performance comparison.
+
+Section 9: Save Assets
+- Saves architectural_model_assets.mat with optimized_model, mu, sigma, selected_mask, final_feature_columns, poly_feature_names.
+
+Notes and Tips
+- For reproducibility, call rng(42) before cvpartition.
+- Guard dynamic column detection (ensure exactly one match per pattern) to avoid indexing errors.
+- Consider permutation importance or SHAP for more robust interpretability.

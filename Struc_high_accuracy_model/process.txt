@@ -1,0 +1,27 @@
+Structural Model Implementation Plan:
+
+1. Data Processing:
+   - Standardize project names to a consistent format ('X STY Y CLS Location').
+   - Extract the year and budget from the dataset.
+   - Process the 'Stuctural Quantity Cost.csv' and 'Stuctural Unit Cost.csv' files.
+   - Merge the two files, calculating the total cost for each structural aspect.
+   - Clean the merged data by handling missing values, removing outliers, and dropping irrelevant columns.
+   - Save the cleaned data to 'structural_cleaned.csv'.
+
+2. Feature Visualization:
+   - Generate and save visualizations (histograms and boxplots) for the distribution of each cost feature to understand their characteristics.
+
+3. Model Training:
+   - Split the cleaned data into training and testing sets.
+   - Train a LightGBM regression model on the training data to predict the project budget.
+   - Evaluate the model's performance on both the training and testing sets using metrics like R-squared and Mean Squared Error.
+   - Save the trained model to 'struc_budget_model.joblib'.
+
+4. Advanced Visualization:
+   - Create and save a correlation matrix heatmap to visualize the relationships between features.
+   - Generate and save scatter plots of actual vs. predicted budget values for both training and testing sets.
+   - Plot and save the model's training history (loss over epochs) to check for overfitting.
+
+5. Conclusion:
+   - Consolidate all steps into a single Jupyter Notebook named 'Structural_Analysis_Notebook.ipynb'.
+   - Provide a summary of the entire workflow and the final model's performance.

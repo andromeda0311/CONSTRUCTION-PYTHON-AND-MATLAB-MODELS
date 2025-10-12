@@ -1,0 +1,23 @@
+>> visualize_and_train
+Step 1: Loading and preparing data...
+     - 'Year' column removed.
+     - Data normalization complete.
+Step 2: Created 'visualizations' directory.
+Step 3: Generating and saving visualizations...
+     - Correlation matrix saved.
+Step 4: Training neural network model...
+     - Model training complete.
+Step 5: Evaluating model and generating results...
+------------------------------------------
+           Model Performance
+------------------------------------------
+Training R-squared: 0.8439
+Training RMSE: 227082.43
+Testing R-squared: 0.8146
+Testing RMSE: 188992.90
+------------------------------------------
+     - Epoch performance plot saved.
+     - Training performance plot saved.
+     - Testing performance plot saved.
+     - Residual plot saved.
+--- All processes complete. ---

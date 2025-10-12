@@ -1,0 +1,119 @@
+Environment cleared.
+
+--- Section 2: Data Loading & Cleaning ---
+Dataset 'Architectural_Total_Cost.csv' loaded successfully.
+Column headers cleaned and duplicates resolved.
+Detected and standardized budget column: budget
+Data cleaning and type conversion complete.
+
+--- Section 3: Feature Engineering & Visualizations ---
+Saved: correlation_matrix_before_architectural.png
+Saved: budget_distributions_comparison_architectural.png
+Feature engineering complete.
+
+--- Section 4: Preparing Data for Models ---
+Using the following features to prevent data leakage:
+    {'year'                        }
+    {'num_storeys'                 }
+    {'num_classrooms'              }
+    {'quantityofplaster_sq_m__'    }
+    {'quantityofglazedtiles_sq_m__'}
+    {'total_painting_area'         }
+    {'total_chb_area'              }
+    {'total_finishes_area'         }
+    {'plaster_per_chb'             }
+    {'tiles_per_chb'               }
+
+Saved: correlation_matrix_after_architectural.png
+Generated 65 polynomial features (up to degree 2).
+Generated 65 polynomial features (up to degree 2).
+Data has been split, transformed, and scaled.
+
+--- Section 5: Baseline Model Performance ---
+Baseline Model R-squared: 0.7993
+Baseline Model MAE: 4416399.93
+
+--- Section 6: Feature Selection ---
+Saved: feature_importance_baseline_architectural.png
+Feature count after selection: 32
+
+--- Section 7: Training Optimized Model ---
+|====================================================================================================================|
+| Iter | Eval   | Objective:  | Objective   | BestSoFar   | BestSoFar   | NumLearningC-| MaxNumSplits |    LearnRate |
+|      | result | log(1+loss) | runtime     | (observed)  | (estim.)    | ycles        |              |              |
+|====================================================================================================================|
+|    1 | Best   |    0.045692 |       9.756 |    0.045692 |    0.045692 |          886 |           29 |     0.098441 |
+|    2 | Accept |    0.046371 |       8.214 |    0.045692 |    0.045741 |          834 |           23 |     0.011303 |
+|    3 | Best   |    0.044127 |      8.5489 |    0.044127 |    0.045397 |          915 |           16 |     0.072529 |
+|    4 | Accept |    0.046022 |      4.8973 |    0.044127 |    0.045553 |          530 |           23 |     0.038185 |
+|    5 | Accept |    0.044615 |       8.852 |    0.044127 |    0.044446 |          912 |           16 |     0.071699 |
+|    6 | Accept |    0.052395 |      4.5263 |    0.044127 |     0.04438 |          503 |           16 |      0.01033 |
+|    7 | Best   |    0.042071 |      9.5433 |    0.042071 |    0.042103 |          977 |           12 |     0.073375 |
+|    8 | Accept |    0.045768 |      9.4591 |    0.042071 |    0.042072 |         1000 |           15 |     0.046704 |
+|    9 | Accept |    0.045197 |       9.695 |    0.042071 |    0.042119 |          995 |           18 |     0.078772 |
+|   10 | Best   |    0.039863 |      5.8863 |    0.039863 |    0.039876 |          714 |            8 |     0.099656 |
+|   11 | Accept |    0.046285 |      7.0446 |    0.039863 |    0.039889 |          810 |           32 |     0.010008 |
+|   12 | Accept |    0.040461 |      5.4271 |    0.039863 |    0.040178 |          654 |            8 |     0.099882 |
+|   13 | Accept |    0.041513 |      6.1697 |    0.039863 |    0.040497 |          721 |            9 |     0.099913 |
+|   14 | Accept |    0.041365 |      5.6154 |    0.039863 |    0.040532 |          691 |            8 |     0.069182 |
+|   15 | Accept |    0.040942 |      4.5093 |    0.039863 |    0.040632 |          548 |            8 |     0.098948 |
+|   16 | Accept |    0.040654 |      5.8862 |    0.039863 |    0.040637 |          749 |            8 |     0.010023 |
+|   17 | Accept |    0.040059 |      5.6107 |    0.039863 |    0.040678 |          702 |            8 |     0.019237 |
+|   18 | Accept |    0.040022 |      4.4971 |    0.039863 |    0.040157 |          521 |            8 |     0.020767 |
+|   19 | Accept |    0.040787 |      20.473 |    0.039863 |    0.040357 |          975 |            8 |     0.019653 |
+|   20 | Accept |    0.040219 |      17.609 |    0.039863 |    0.040316 |          504 |            8 |     0.018518 |
+|====================================================================================================================|
+| Iter | Eval   | Objective:  | Objective   | BestSoFar   | BestSoFar   | NumLearningC-| MaxNumSplits |    LearnRate |
+|      | result | log(1+loss) | runtime     | (observed)  | (estim.)    | ycles        |              |              |
+|====================================================================================================================|
+|   21 | Accept |    0.046313 |      30.378 |    0.039863 |    0.040319 |          816 |           27 |     0.010032 |
+|   22 | Accept |    0.045396 |      22.227 |    0.039863 |    0.040322 |          573 |           32 |     0.099638 |
+|   23 | Accept |    0.041408 |       33.27 |    0.039863 |    0.040287 |          885 |           12 |     0.010006 |
+|   24 | Accept |     0.04161 |      20.677 |    0.039863 |    0.040322 |          519 |           10 |     0.013304 |
+|   25 | Accept |    0.039994 |      21.198 |    0.039863 |    0.040079 |          586 |            8 |     0.015741 |
+|   26 | Accept |    0.043047 |      35.996 |    0.039863 |     0.04004 |          999 |            8 |     0.092981 |
+|   27 | Accept |    0.040722 |       37.36 |    0.039863 |     0.04015 |          978 |           10 |     0.013203 |
+|   28 | Accept |      0.0406 |      22.778 |    0.039863 |    0.040047 |          641 |            8 |     0.022653 |
+|   29 | Accept |    0.039949 |      8.4009 |    0.039863 |    0.040022 |          748 |            9 |     0.016175 |
+|   30 | Accept |    0.039966 |      5.7814 |    0.039863 |    0.039969 |          681 |            8 |     0.015649 |
+
+__________________________________________________________
+Optimization completed.
+MaxObjectiveEvaluations of 30 reached.
+Total function evaluations: 30
+Total elapsed time: 403.9665 seconds
+Total objective function evaluation time: 400.2857
+
+Best observed feasible point:
+    NumLearningCycles    MaxNumSplits    LearnRate
+    _________________    ____________    _________
+
+           714                8          0.099656 
+
+Observed objective function value = 0.039863
+Estimated objective function value = 0.040321
+Function evaluation time = 5.8863
+
+Best estimated feasible point (according to models):
+    NumLearningCycles    MaxNumSplits    LearnRate
+    _________________    ____________    _________
+
+           681                8          0.015649 
+
+Estimated objective function value = 0.039969
+Estimated function evaluation time = 10.4001
+
+
+--- Section 8: Final Model Evaluation & Visualizations ---
+Final Optimized Model R-squared: 0.8476
+Final Optimized Model MAE: 4247884.28
+Saved: actual_vs_predicted_architectural.png
+Saved: residual_plot_architectural.png
+Saved: feature_importance_final_architectural.png
+Saved: performance_comparison_architectural.png
+
+--- Section 9: Saving Final Assets ---
+All model assets saved to 'architectural_model_assets.mat'.
+
+Process finished.
+>> 
