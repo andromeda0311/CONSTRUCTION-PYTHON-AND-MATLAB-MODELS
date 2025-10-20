@@ -1,0 +1,365 @@
+Structural Cost: Training and Visualization Notes
+
+Explanation (Structural - Foundations, Columns, Beams, Slabs, and Load-Bearing Elements)
+
+Pipeline summary (training and evaluation)
+1) Data loading and cleaning
+   - Loads Structural_Total_Cost.csv with preserved headers.
+   - Normalizes column names (lowercase, valid/unique), drops "unnamed*" columns.
+   - Detects the budget column (case-insensitive), standardizes its name to "budget".
+   - Converts numeric-looking text (commas) to doubles and removes rows with NaN budget.
+   - Median-imputes all numeric missing values.
+
+2) Target transform and filtering
+   - Creates budget_log = log1p(budget) to stabilize variance and reduce skew.
+   - Filters to projects with budget > 100,000 (removes extreme small values and outliers on the low end).
+
+3) Feature engineering (Structural-specific)
+   - Extracts num_storeys and num_classrooms from the "project" string via regex.
+   - Median-imputes missing storeys/classrooms.
+   - Dynamically finds and aggregates structural columns:
+     * total_gross_floor_area (sum of all floor area columns)
+     * total_concrete_volume (sum of all structural concrete volumes)
+     * total_reinforcing_steel = Grade40 + Grade60 steel
+   - Builds intensity ratios (non-leaky):
+     * concrete_per_floor_area (concrete efficiency metric)
+     * steel_per_concrete (steel intensity per concrete volume)
+   - NOTE: cost_per_sqm and cost_per_classroom are calculated but NOT used in training to prevent data leakage.
+   - Replaces inf/NaN with 0 to handle division by zero cases.
+
+4) Feature set and split
+   - Final features used (data leakage prevention):
+     year, num_storeys, num_classrooms, total_gross_floor_area,
+     total_concrete_volume, total_reinforcing_steel, formworks,
+     concrete_per_floor_area, steel_per_concrete
+   - Explicitly excludes cost_per_sqm and cost_per_classroom (derived from target).
+   - 80/20 HoldOut split (random each run; no fixed seed).
+
+5) Expansion and scaling
+   - Generates polynomial features up to degree 2 from the final features.
+   - Standardizes with z-score (stores mu, sigma for reuse).
+
+6) Baseline model
+   - Gradient boosting (LSBoost) with 100 trees on all scaled polynomial features.
+   - Evaluates on test set; prints R-squared and MAE after inverting the log transform (expm1).
+
+7) Feature selection
+   - Uses predictorImportance from the baseline booster.
+   - Keeps features with importance above the median (simple filter).
+
+8) Optimized model
+   - Tunes LSBoost hyperparameters (NumLearningCycles, MaxNumSplits, LearnRate).
+   - Trains on the selected features; evaluates R-squared and MAE on the test set.
+
+9) Assets saved
+   - structural_model_assets.mat includes:
+     optimized_model, mu, sigma, selected_mask, final_feature_columns, poly_feature_names.
+
+
+Visualizations and honest interpretation
+
+1) Correlation Matrix (Before Feature Engineering)
+   File: visualizations/correlation_matrix_before_structural.png
+   What it shows:
+   - Pairwise Pearson correlations among all raw numeric features from Structural dataset.
+   How to read:
+   - Brighter/warmer colors (red) indicate stronger positive correlations; cooler colors (blue) indicate negative correlations.
+   Honest interpretation:
+   - Structural components typically show VERY high correlations (>0.9) because they scale proportionally with building size.
+   - For example: concrete volume, floor area, reinforcing steel, and formworks all grow together as buildings get larger.
+   - This extreme multicollinearity would devastate linear regression but is manageable for tree-based models.
+   - High correlations also indicate redundancy—we don't need all raw quantities; aggregated features capture the same signal with less noise.
+   - Budget shows strong correlation with physical quantities (concrete, steel, area)—this is the signal we want to learn.
+   - Correlation ≠ causation: these relationships reflect shared dependence on building scale, not direct cause-effect.
+   - Use this to justify feature aggregation and to anticipate which raw features contain similar information.
+
+2) Budget Distributions (Skewed vs. Log-Transformed)
+   File: visualizations/budget_distributions_comparison.png
+   What it shows:
+   - Left: raw budget distribution (heavily right-skewed, long tail toward high budgets).
+   - Right: log1p(budget) distribution (more symmetric, approximately normal).
+   Honest interpretation:
+   - Structural costs span enormous ranges because they scale with building volume—small single-story buildings vs. large multi-story complexes can differ by 50x or more.
+   - The raw distribution's skewness would cause models to optimize for high-budget projects at the expense of low-budget accuracy.
+   - Log transform equalizes the importance of percentage errors across the budget spectrum—a 10% error on a 5M project is as important as a 10% error on a 50M project.
+   - Filtering budget > 100,000 removes outliers and incomplete data (partial renovations, data entry errors) but may reduce generalization to very small structural projects.
+   - This transform is essential for structural models because construction physics (materials, labor) scales proportionally with size, making percentage-based modeling natural.
+
+3) Correlation Matrix (After Feature Engineering)
+   File: visualizations/correlation_matrix_after_structural.png
+   What it shows:
+   - Correlations among the 9 engineered final features (before polynomial expansion).
+   Honest interpretation:
+   - Aggregated features (total_gross_floor_area, total_concrete_volume, total_reinforcing_steel) still show moderate-to-high correlations because they all represent building scale.
+   - Ratio features (concrete_per_floor_area, steel_per_concrete) should show LOWER correlations with raw totals—they capture intensity/efficiency rather than scale.
+   - If steel_per_concrete correlates weakly with other features, it indicates this ratio captures unique information (steel-to-concrete ratio varies by design—earthquake zones need more steel).
+   - Year may show weak correlation with physical features but might correlate with budget due to inflation or changing building codes (concrete/steel requirements).
+   - Strong correlation between num_storeys and total_concrete_volume is expected (taller = more structural material).
+   - Use this to validate that engineered features are less redundant than raw features, improving model efficiency.
+   - If correlations remain very high (>0.95), consider removing redundant features or using PCA.
+
+4) Baseline Feature Importance (Top 20)
+   File: visualizations/feature_importance_baseline_structural.png
+   What it shows:
+   - The 20 polynomial features (including interactions and squared terms) with highest gain in the baseline LSBoost model.
+   Honest interpretation:
+   - Expect squared terms of totals (e.g., total_concrete_volume^2, total_gross_floor_area^2) to rank very high because structural costs scale non-linearly with size (larger projects have disproportionately higher complexity and per-unit costs).
+   - Interaction terms like num_storeys × total_concrete_volume or total_reinforcing_steel × concrete_per_floor_area capture how structural requirements compound (more floors + more concrete = exponentially higher cost due to foundation requirements).
+   - If formworks ranks high, it validates that formwork (temporary structures for pouring concrete) is a major cost driver in construction.
+   - Ratio features (steel_per_concrete, concrete_per_floor_area) ranking high suggests the model values intensity metrics—buildings with higher steel-to-concrete ratios (earthquake-resistant designs) cost more.
+   - Year may rank low, suggesting structural costs are relatively stable over time compared to MEPFS or Architectural (which depend more on finish/equipment choices).
+   - Importances reflect split gain, not causal effect size—correlated features share importance, so don't interpret as "feature X increases cost by Y."
+   - Use this to identify which engineered features are being exploited by the model and to guide future data collection (if steel_per_concrete is critical, ensure accurate steel grade tracking).
+
+5) Actual vs. Predicted (Test Set)
+   File: visualizations/actual_vs_predicted_structural.png
+   What it shows:
+   - Scatter plot of actual vs predicted budget (after inverting log) with y=x diagonal reference line.
+   Honest interpretation:
+   - Tight clustering around the diagonal indicates good calibration—the model is neither systematically over- nor under-predicting.
+   - Structural models often achieve higher R² than MEPFS/Architectural because structural costs are more deterministic (physics-based: concrete volume × unit cost, steel tonnage × unit cost).
+   - Wider spread at high budgets (>30M) suggests the model has more uncertainty for very large/complex projects—likely because:
+     a) Training data has fewer examples in that range (small sample size).
+     b) Large projects have unique characteristics (deep foundations, specialized seismic design) not fully captured by current features.
+   - Systematic bias (e.g., predictions consistently below diagonal at high end) would indicate the model underestimates complexity for large projects—this might require stratified modeling (separate models for small/large projects).
+   - Any outliers far from the diagonal warrant investigation:
+     - Large negative residuals (over-prediction): projects with cost efficiencies (bulk material discounts, efficient design).
+     - Large positive residuals (under-prediction): projects with unforeseen complications (poor soil conditions requiring deeper foundations, design changes).
+   - If R² > 0.85, the model is strong; if R² < 0.75, consider adding features like soil conditions, seismic zone, or foundation type.
+
+6) Residual Plot (Test Set)
+   File: visualizations/residual_plot_structural.png
+   What it shows:
+   - Residuals (Actual − Predicted) vs Predicted budget, with horizontal zero line.
+   Honest interpretation:
+   - Ideally, residuals should be randomly scattered around zero with constant variance (homoskedasticity) and no trends.
+   - Fan/funnel shape (residuals spread wider as predictions increase) indicates heteroskedasticity—the model is less precise for high-budget projects. This is common in construction because:
+     - Large projects have more variable execution (contractor efficiency, schedule overruns).
+     - Material costs fluctuate more in absolute terms for large orders.
+   - If residuals show curvature (e.g., positive at low/high ends, negative in middle), it suggests remaining non-linearity not captured by degree-2 polynomials—consider:
+     - Degree-3 polynomials (but risk overfitting).
+     - Spline features or binning by project size.
+     - Separate models for small/medium/large projects.
+   - Clustered outliers with large positive residuals may indicate a specific project type (e.g., buildings on difficult terrain) that needs additional features.
+   - Large negative residuals may indicate projects with incomplete data (recorded partial costs) or exceptional efficiency (prefabricated components).
+   - If residuals show temporal patterns (grouped by year), it suggests inflation or code changes not captured by the year feature—consider adding regional cost indices.
+   - Mean residual close to zero validates unbiased predictions; non-zero mean indicates systematic over/under-prediction.
+
+7) Final Model Feature Importance (Top 20)
+   File: visualizations/feature_importance_final_structural.png
+   What it shows:
+   - Importances after feature selection and hyperparameter tuning.
+   Honest interpretation:
+   - Changes in ranking vs. baseline suggest the optimized model found different useful patterns—often exploiting deeper interactions with tuned MaxNumSplits and LearnRate.
+   - If squared terms remain dominant, it confirms non-linear cost scaling with building size.
+   - If interaction terms gain prominence, the tuned model learned to better capture how multiple factors compound (e.g., tall buildings in seismic zones need disproportionately more reinforcing steel).
+   - If year drops in importance, the model relies more on physical features than temporal trends (good for generalization across time).
+   - If ratio features (steel_per_concrete, concrete_per_floor_area) rise in importance, the model learned that intensity matters as much as scale—high-steel designs cost more per unit volume.
+   - Still subject to correlation bias—permutation importance or SHAP would give more robust causal insights by independently shuffling each feature.
+   - Top features guide future data priorities: if concrete_per_floor_area is critical, ensure accurate floor area and concrete volume measurements.
+   - Features with zero or near-zero importance after tuning can be safely removed in production to speed up inference.
+
+8) Performance Comparison (Baseline vs Optimized)
+   File: visualizations/performance_comparison_structural.png
+   What it shows:
+   - Side-by-side bars for R² and MAE, comparing baseline and optimized models.
+   Honest interpretation:
+   - Expect modest improvement after tuning (typically +1-5% R², -2-10% MAE) because:
+     - Baseline already captures most signal with 100 trees.
+     - Optimization refines split depths and learning rate to exploit remaining patterns.
+   - If R² improvement is small (<1%), it suggests:
+     a) Current features capture most explainable variance.
+     b) Remaining error is due to unmeasured factors (soil conditions, contractor efficiency, design changes).
+     c) Model is approaching the noise floor—more data or new features needed for further gains.
+   - MAE in currency units provides practical context: if MAE = 2M on projects averaging 20M, typical errors are ~10%—reasonable for construction cost estimation.
+   - Compare MAE to industry benchmarks: if industry estimates have ±15-20% error, an MAE of 10% is excellent.
+   - Single 80/20 split can fluctuate due to random sampling—use 5-fold or 10-fold cross-validation for stable performance estimates.
+   - For production deployment, the optimized model is preferred unless:
+     - Speed matters (baseline is faster).
+     - Improvement is negligible (<0.5% R²) and hyperparameter tuning adds complexity.
+   - If baseline R² is already high (>0.9), optimization may not yield meaningful gains—focus on feature engineering instead.
+
+
+Key caveats and recommendations
+
+- Randomness: Results vary between runs due to random HoldOut. For reproducibility, set rng(42) before cvpartition.
+
+- Structural-specific challenges:
+  * Structural costs depend heavily on unmeasured factors:
+    - Soil conditions (poor soil requires deeper/more expensive foundations).
+    - Seismic design requirements (earthquake zones need more reinforcing steel, special details).
+    - Foundation type (pile foundations vs. spread footings) has huge cost implications.
+    - Material sourcing (local vs. imported steel/cement affects costs).
+  * Regional variations in labor rates, material costs, and building codes can create large prediction errors if data spans multiple regions without location features.
+  * Temporal effects (steel/cement price volatility, currency fluctuations) may not be captured by the year feature alone—consider adding material price indices.
+
+- Feature engineering quality:
+  * Current features assume concrete and steel are the primary cost drivers—this is generally true but ignores:
+    - Excavation costs (vary with soil type, depth).
+    - Foundation complexity (not captured by concrete volume alone).
+    - Special structural systems (moment frames, shear walls, seismic isolators).
+  * Ratios assume linear relationships (steel_per_concrete), but reality may be more complex (minimum reinforcement ratios, code requirements).
+  * Floor area as a proxy for building size ignores building height—a 10-story building costs more per m² than a 2-story building with the same total area.
+
+- Data leakage prevention:
+  * This pipeline correctly excludes cost_per_sqm and cost_per_classroom (derived from budget target).
+  * Continue to audit all features to ensure they are known at estimation time (before construction, before final bids).
+  * Beware of "future leakage"—features that seem innocent but encode information only available post-construction (e.g., actual material quantities vs. estimated).
+
+- Scale effects:
+  * Even with log transform, very large projects (>40M) show larger errors—consider:
+    - Stratified modeling: separate models for small (<10M), medium (10-30M), and large (>30M) projects.
+    - Ensemble of models: blend predictions from size-specific models weighted by confidence.
+    - Additional features for large projects: project duration, contractor tier, special systems.
+
+- Explainability:
+  * Gain-based importance can mislead with correlated features—use permutation importance or SHAP for stakeholder presentations.
+  * Structural engineers may distrust black-box models—consider hybrid approaches:
+    - Parametric baseline (cost per m² × floor area) adjusted by model predictions.
+    - Physics-informed features (structural load calculations) to improve interpretability.
+
+- Robustness:
+  * If "year" spans many years, validate on time-based split to check temporal generalization (train on 2015-2020, test on 2021-2023).
+  * Monitor for concept drift: building codes change (new seismic requirements), material costs fluctuate (steel tariffs), construction methods evolve (prefabrication).
+  * Validate model on projects from different regions if data includes multiple locations.
+
+- Model limitations:
+  * R² typically ranges 0.75-0.90 for structural models—higher than MEPFS/Architectural due to physics-based determinism, but still leaves 10-25% unexplained variance.
+  * Unexplained variance may include:
+    - Design efficiency: good structural engineers optimize material use, reducing costs by 10-20%.
+    - Contractor competitiveness: bid environment affects pricing (competitive bids lower, sole-source higher).
+    - Schedule constraints: rushed projects incur premium labor/material costs.
+    - Site conditions: access constraints (urban vs. rural), existing structures (renovation vs. new), terrain (flat vs. sloped).
+    - Quality specifications: standard-grade vs. high-performance concrete, standard vs. corrosion-resistant steel.
+
+- Future improvements:
+  * Collect foundation type (pile, spread footing, mat, caisson) and depth—major cost drivers.
+  * Add seismic design category or wind zone—drives structural requirements.
+  * Track soil conditions (bearing capacity, groundwater level)—affects foundation costs.
+  * Include contractor experience/tier—experienced contractors may bid lower due to efficiency.
+  * Add project schedule (duration, fast-track vs. normal)—tight schedules increase costs.
+  * Consider material price indices (steel, cement) instead of raw year—more direct measure of inflation.
+
+
+Files referenced
+- Visuals:
+  - visualizations/correlation_matrix_before_structural.png
+  - visualizations/budget_distributions_comparison.png
+  - visualizations/correlation_matrix_after_structural.png
+  - visualizations/feature_importance_baseline_structural.png
+  - visualizations/actual_vs_predicted_structural.png
+  - visualizations/residual_plot_structural.png
+  - visualizations/feature_importance_final_structural.png
+  - visualizations/performance_comparison_structural.png
+- Script:
+  - main.m (end-to-end pipeline that generated the above)
+- Assets:
+  - structural_model_assets.mat (trained model and preprocessing parameters)
+
+
+---
+
+MATLAB Code Walkthrough (Section by Section)
+
+Section 1: Setup
+- Clears workspace, command window, and figures.
+- Ensures a 'visualizations' folder exists for saving plots.
+
+Section 2: Data Loading and Cleaning
+- Loads Structural_Total_Cost.csv with preserved headers (detectImportOptions + readtable).
+- Cleans headers: lowercased, valid, unique; drops any columns starting with 'unnamed'.
+- Detects and standardizes the target column to 'budget' (case-insensitive search).
+- Converts text-with-commas numeric fields to double; removes rows with missing budget.
+- Median-imputes all remaining numeric NaNs.
+
+Section 3: Feature Engineering and Initial Visuals
+- Saves correlation matrix of raw numeric columns (before engineering) with larger figure size and cell labels.
+- Adds budget_log = log1p(budget) and filters to budget > 100000.
+- Saves side-by-side budget distribution comparison (raw vs log).
+- Extracts from project text: num_storeys via '(\d+)\s*STY' and num_classrooms via '(\d+)\s*CL'; median-fills if missing.
+- Aggregates structural quantities:
+  - total_gross_floor_area (sum of all floor area columns)
+  - total_concrete_volume (sum of all structural concrete volumes)
+  - total_reinforcing_steel (Grade40 + Grade60)
+- Engineers ratios:
+  - cost_per_sqm, cost_per_classroom (calculated but NOT used in training—potential data leakage)
+  - concrete_per_floor_area (non-leaky: concrete efficiency)
+  - steel_per_concrete (non-leaky: steel intensity)
+- Replaces Inf/NaN with 0.
+
+Section 4: Data Prep for Models
+- CRITICAL FIX: Explicitly excludes cost_per_sqm and cost_per_classroom from final features to prevent data leakage.
+- Final features (9):
+  year, num_storeys, num_classrooms, total_gross_floor_area,
+  total_concrete_volume, total_reinforcing_steel, formworks,
+  concrete_per_floor_area, steel_per_concrete
+- Splits data via cvpartition HoldOut 0.2 into train/test.
+- Expands to degree-2 polynomial features (generatePolyFeatures).
+- Standardizes with zscore on train; applies mu/sigma to test; fills scaling NaNs with 0.
+
+Section 5: Baseline Model
+- Trains LSBoost ensemble with 100 learning cycles on scaled polynomial features.
+- Predicts on test, inverts log (expm1), computes R-squared and MAE in currency units.
+
+Section 6: Feature Selection
+- Uses predictorImportance from baseline model.
+- Saves Top-20 importance plot.
+- Selects features with importance above the median threshold.
+
+Section 7: Optimized Model
+- Tunes NumLearningCycles [500–1000], MaxNumSplits [8–32], LearnRate [0.01–0.1] (log transform) using Bayesian optimization.
+- Trains optimized_model on selected features.
+
+Section 8: Final Evaluation & Visuals
+- Predicts on test, computes final R-squared and MAE.
+- Saves plots:
+  - Actual vs Predicted scatter with diagonal reference
+  - Residuals vs Predicted with zero baseline
+  - Final Feature Importance (Top-20)
+  - Baseline vs Optimized performance comparison (R² and MAE bars)
+
+Section 9: Save Assets
+- Saves structural_model_assets.mat with optimized_model, mu, sigma, selected_mask, final_feature_columns, poly_feature_names.
+
+Notes and Tips
+- For reproducibility, call rng(42) before cvpartition.
+- Guard dynamic column detection (ensure matches exist) to avoid indexing errors.
+- Structural models benefit from foundation/soil features—consider adding if available.
+- Consider permutation importance or SHAP for more robust interpretability.
+- Validate on time-based splits if dataset spans many years.
+- Monitor for regional variations if data spans multiple locations.
+
+
+---
+
+Structural Cost: Story of the Training Pipeline
+
+The stage is cleared, and the workspace is prepared. A visualizations folder stands ready to capture the journey. The script invites Structural_Total_Cost.csv—a detailed ledger of foundations, columns, beams, slabs, and the skeletal framework of school buildings.
+
+First, the data is purified. Column names are scrubbed lowercase, validated, and made unique. Stray "unnamed" columns are dismissed. The budget column—the protagonist—is detected (even if hiding under a different name) and standardized.
+
+Numbers trapped in text (commas disguising thousands) shed their formatting and emerge as doubles. Missing numeric values are filled with medians, restoring completeness. Rows with absent budgets exit the scene.
+
+The budget undergoes transformation. Raw structural costs span vast ranges—from simple single-story buildings to massive multi-story complexes requiring deep foundations and extensive reinforcement. The log1p transform compresses this range, equalizing the importance of percentage errors across scales. Projects under 100,000 step aside, focusing the model on complete structural systems.
+
+Feature engineering begins. From project descriptions, the script extracts num_storeys and num_classrooms via regex. Missing values are filled with medians.
+
+The script then aggregates structural quantities:
+- total_gross_floor_area captures building size
+- total_concrete_volume measures the primary structural material
+- total_reinforcing_steel sums Grade40 and Grade60 steel tonnage
+- formworks represents temporary structures for concrete casting
+
+But the script also calculates intensity ratios—concrete_per_floor_area and steel_per_concrete—capturing efficiency and design intensity beyond raw scale. Importantly, cost_per_sqm and cost_per_classroom are computed but deliberately excluded from training to prevent data leakage (they're derived from the target budget).
+
+With 9 carefully selected features, the data splits: 80% for training, 20% for testing. To enable the model to discover non-linear relationships and interactions, polynomial features up to degree 2 are generated. All are standardized via z-score.
+
+The baseline rehearsal begins: a gradient boosting regressor (LSBoost) with 100 trees learns from the scaled polynomial features. Performance is evaluated on the test set in real currency (predictions brought back from log space).
+
+The script listens for which features contributed most (predictorImportance). Those above the median—roughly half—retain their roles. The rest step back.
+
+With a focused, powerful cast, the final act is prepared. Bayesian optimization explores combinations of learning cycles (500-1000), split depth (8-32), and learning rate (0.01-0.1), seeking the optimal balance of bias and variance.
+
+The optimized model delivers its final performance. The visuals capture the story: correlations before and after engineering showing how aggregation reduced multicollinearity, importances revealing which polynomial terms the model exploited, calibration scatter showing prediction accuracy, residuals revealing patterns and heteroskedasticity, and a head-to-head comparison showing the gains from optimization.
+
+At curtain call, everything needed for deployment is saved: the trained model, scaling parameters, feature selection mask, and feature names—ready to estimate structural costs for new projects with consistent, reproducible preprocessing.
